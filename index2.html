@@ -7,12 +7,12 @@
     <meta name="theme-color" content="#0b72b9"/>
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="https://i.postimg.cc/2SbDgD1B/1.png">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📦</text></svg>">
+    <link rel="icon" href="https://i.postimg.cc/2SbDgD1B/1.png">
 
+    <!-- Fonts and Libraries -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&display=swap" rel="stylesheet">
-    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -20,6 +20,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"></script>
 
     <style>
+        /* General Styling and Variables */
         :root {
             --brand: #0b72b9; --accent: #ff9f1c; --bg: #f0f2f5; --card: #ffffff;
             --text-dark: #1a202c; --text-light: #4a5568; --text-muted: #718096;
@@ -28,20 +29,24 @@
             --page-transition-duration: 0.4s;
         }
 
+        /* Keyframe Animations */
         @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes popIn { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
         @keyframes logoPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
         
+        /* Basic Setup */
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         html, body { height: 100%; overflow: hidden; background-color: var(--bg); }
         body { font-family: 'Assistant', sans-serif; color: var(--text-dark); display: flex; flex-direction: column; overscroll-behavior-y: contain; visibility: hidden; }
         body.loaded { visibility: visible; }
 
+        /* App Structure */
         .app-shell { display: flex; flex-direction: column; height: 100%; }
         .app-header { flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; padding: 10px 15px; background-color: var(--card); border-bottom: 1px solid var(--border); position: relative; z-index: 10; }
         .app-container { flex-grow: 1; overflow: hidden; position: relative; }
         .bottom-nav { flex-shrink: 0; position: fixed; bottom: 0; left: 0; right: 0; height: 80px; background-color: var(--card); display: flex; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); z-index: 1000; }
 
+        /* Page Transitions & Styling */
         .page { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow-y: auto; padding: 20px 15px 120px 15px; background-color: var(--bg); visibility: hidden; opacity: 0; transition: transform var(--page-transition-duration) ease, opacity var(--page-transition-duration) ease; }
         .page.active { visibility: visible; opacity: 1; transform: translateX(0); z-index: 5;}
         .page.exit-to-left { transform: translateX(-30px); opacity: 0; }
@@ -50,24 +55,29 @@
         .page.enter-from-right { transform: translateX(30px); }
         .page-title { font-size: 28px; font-weight: 700; margin-bottom: 20px; animation: fadeIn 0.5s ease-out forwards; }
         
+        /* Navigation Buttons */
         .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: var(--text-muted); text-decoration: none; font-weight: 600; font-size: 14px; border: none; background: transparent; cursor: pointer; transition: color 0.2s, transform 0.2s;}
         .nav-btn.active { color: var(--brand); }
         .nav-btn:active svg { transform: scale(1.2); }
         .nav-btn svg { width: 28px; height: 28px; pointer-events: none; transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 
+        /* Common Components */
         .card { background-color: var(--card); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); margin-bottom: 20px; border: 1px solid var(--border); animation: popIn 0.5s ease-out forwards; }
         .btn { background: var(--brand); color: white; border: none; padding: 12px 18px; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 15px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; }
         .btn:active { transform: scale(0.95); }
         .btn.secondary { background-color: var(--bg); color: var(--text-dark); border: 1px solid var(--border); }
         
+        /* Modals (Glassmorphism effect) */
         .modal-overlay { position: fixed; inset: 0; background-color: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 2000; opacity: 0; visibility: hidden; transition: opacity 0.3s; backdrop-filter: blur(5px); }
         .modal-overlay.show { opacity: 1; visibility: visible; }
         .modal-content { background-color: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.2); padding: 25px; border-radius: var(--radius); width: 90%; max-width: 500px; animation: popIn 0.3s; box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37); }
 
+        /* Toast Notifications */
         #toast-container { position: fixed; top: 20px; left: 15px; right: 15px; z-index: 4000; display: flex; flex-direction: column; gap: 10px; align-items: center;}
         .toast { display: flex; align-items: center; gap: 12px; width: 100%; max-width: 400px; background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); color: var(--text-dark); padding: 12px 20px; border-radius: var(--radius); font-weight: 600; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid rgba(255, 255, 255, 0.3); opacity: 0; transform: translateY(-20px); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .toast.show { opacity: 1; transform: translateY(0); }
         
+        /* Splash Screen */
         #splash-screen { position: fixed; inset: 0; z-index: 9999; background-color: var(--brand); display: flex; justify-content: center; align-items: center; transition: opacity 0.5s ease, visibility 0.5s ease; }
         #splash-logo { width: 120px; height: 120px; background-color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 20px rgba(0,0,0,0.2); animation: logoPulse 2s infinite ease-in-out; }
         .glass-door { position: absolute; top: 0; bottom: 0; width: 50%; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(15px); transition: transform 1.2s cubic-bezier(0.86, 0, 0.07, 1); }
@@ -76,21 +86,25 @@
         #splash-screen.opening #door-left { transform: translateX(-100%); }
         #splash-screen.opening #door-right { transform: translateX(100%); }
 
+        /* Container Card Specifics */
         .container-card .progress-bar { width: 100%; height: 8px; background-color: var(--border); border-radius: 4px; overflow: hidden; margin: 15px 0; }
         .container-card .progress-bar-inner { height: 100%; background-color: var(--brand); border-radius: 4px; transition: width 0.8s ease-out; }
         .container-card.overdue .progress-bar-inner { background-color: var(--danger); }
         .mini-map-container { border-radius: 12px; border: 1px solid var(--border); height: 150px; width: 100%; margin-top: 15px; background-color: #eee; }
         .leaflet-control-zoom, .leaflet-control-attribution { display: none !important; }
 
+        /* Help FAB and Modal */
         .help-fab { position: fixed; bottom: 100px; left: 20px; width: 50px; height: 50px; background-color: var(--accent); color: white; border-radius: 50%; border: none; font-size: 24px; font-weight: bold; box-shadow: var(--shadow); z-index: 1001; cursor: pointer; animation: popIn 0.5s 2s ease-out backwards; }
         .help-modal { position: fixed; inset: 0; background: var(--bg); z-index: 3000; transform: translateY(100%); transition: transform 0.4s ease-out; display: flex; flex-direction: column;}
         .help-modal.show { transform: translateY(0); }
         .help-header { padding: 15px; text-align: center; position: relative; background: var(--card); }
         .help-close { position: absolute; top: 10px; left: 15px; font-size: 24px; cursor: pointer; border: none; background: none;}
         
+        /* Request History in Card */
         .request-history { margin-top: 20px; border-top: 1px solid var(--border); padding-top: 15px; }
         .request-history-item { display: flex; justify-content: space-between; padding: 8px 0; font-size: 14px; }
         
+        /* Profile & Logout */
         .profile-container { position: relative; cursor: pointer; }
         .profile-avatar { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--border); transition: transform 0.2s; }
         .logout-popup { position: absolute; top: 50px; left: 0; background: var(--card); border-radius: 10px; box-shadow: var(--shadow); padding: 5px; opacity: 0; visibility: hidden; transition: opacity 0.2s, transform 0.2s; transform: translateY(10px); z-index: 10; }
@@ -99,6 +113,7 @@
     </style>
 </head>
 <body>
+    <!-- Main application structure, hidden until loaded -->
     <div class="app-shell" style="display: none;">
         <header class="app-header">
              <div id="profile-container" class="profile-container">
@@ -118,6 +133,7 @@
         </header>
 
         <main class="app-container" id="app-container">
+            <!-- Home Page -->
             <div id="page-home" class="page">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
                     <h1 class="page-title" id="greeting" style="margin-bottom: 0;"></h1>
@@ -126,9 +142,12 @@
                 <div id="eta-card-container"></div>
                 <div id="active-orders-container"></div>
             </div>
+            <!-- Containers Page -->
             <div id="page-containers" class="page"><h1 class="page-title">המכולות שלי</h1><div id="containers-list"></div></div>
-            <div id="page-history" class="page"><h1 class="page-title">היסטוריה</h1><div id="history-content"></div></div>
-            <div id="page-chat" class="page"><h1 class="page-title">צ'אט</h1><div id="chat-content"></div></div>
+            <!-- History Page -->
+            <div id="page-history" class="page"><h1 class="page-title">היסטוריה</h1><div id="history-content" class="card"></div></div>
+            <!-- Chat Page -->
+            <div id="page-chat" class="page"><h1 class="page-title">צור קשר</h1><div id="chat-content" class="card"></div></div>
         </main>
         
         <nav class="bottom-nav">
@@ -139,38 +158,26 @@
         </nav>
     </div>
 
+    <!-- Floating Action Button and Help Modal -->
     <button class="help-fab" data-action="help-fab" style="display: none;">?</button>
     <div id="help-modal" class="help-modal">
-        <div class="help-header">
-            <h2 style="margin:0;">מדריך למשתמש</h2>
-            <button data-action="help-close" class="help-close">&times;</button>
-        </div>
+        <div class="help-header"><h2 style="margin:0;">מדריך למשתמש</h2><button data-action="help-close" class="help-close">&times;</button></div>
         <div style="flex-grow: 1; padding: 20px; overflow-y: auto;">
-             <div class="card">
-                <h3 style="color: var(--brand); margin-bottom: 10px;">ברוכים הבאים לאזור האישי!</h3>
-                <p>האפליקציה מאפשרת לכם לנהל את המכולות וההזמנות שלכם בקלות ובמהירות, ישירות מהנייד.</p>
-             </div>
-             <div class="card">
-                <h4>🏠 דף הבית</h4>
-                <p>כאן תראו את המכולה הפעילה הבאה שלכם או את צפי ההגעה של נהג במידה ויש הזמנה בדרך. תוכלו לבצע הזמנה חדשה במהירות.</p>
-             </div>
-             <div class="card">
-                <h4>📦 המכולות שלי</h4>
-                <p>עמוד זה מציג את כל המכולות שנמצאות אצלכם באתר. כל כרטיס מציג את מיקום המכולה, התקדמות ימי השכירות, והיסטוריית הבקשות האחרונות. מכאן תוכלו לבקש פינוי או החלפה.</p>
-             </div>
-             <div class="card">
-                <h4>📈 היסטוריה</h4>
-                <p>צפו בגרף של כלל ההזמנות שלכם לאורך זמן ובטבלה מפורטת של כל הפעולות שבוצעו.</p>
-             </div>
+             <div class="card"><h3 style="color: var(--brand); margin-bottom: 10px;">ברוכים הבאים לאזור האישי!</h3><p>האפליקציה מאפשרת לכם לנהל את המכולות וההזמנות שלכם בקלות ובמהירות, ישירות מהנייד.</p></div>
+             <div class="card"><h4>🏠 דף הבית</h4><p>כאן תראו את המכולה הפעילה הבאה שלכם או את צפי ההגעה של נהג במידה ויש הזמנה בדרך. תוכלו לבצע הזמנה חדשה במהירות.</p></div>
+             <div class="card"><h4>📦 המכולות שלי</h4><p>עמוד זה מציג את כל המכולות שנמצאות אצלכם באתר. כל כרטיס מציג את מיקום המכולה, התקדמות ימי השכירות, והיסטוריית הבקשות האחרונות. מכאן תוכלו לבקש פינוי או החלפה.</p></div>
+             <div class="card"><h4>📈 היסטוריה</h4><p>צפו בגרף של כלל ההזמנות שלכם לאורך זמן ובטבלה מפורטת של כל הפעולות שבוצעו.</p></div>
         </div>
     </div>
     
-    <div id="splash-screen"><div id="splash-logo"><img src="https://i.postimg.cc/2SbDgD1B/1.png" alt="לוגו ח.סבן" style="width: 80%; height: auto; border-radius: 50%;"></div><div class="glass-door" id="door-left"></div><div class="glass-door" id="door-right"></div></div>
+    <!-- Splash Screen and overlays -->
+    <div id="splash-screen"><div id="splash-logo"><img src="https://i.postimg.cc/2SbDgD1B/1.png" alt="לוגו ח.סבן" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;"></div><div class="glass-door" id="door-left"></div><div class="glass-door" id="door-right"></div></div>
     <div id="toast-container"></div>
     <div id="modal-container" class="modal-overlay"></div>
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
+        // ========== 1. CONFIG & STATE ==========
         const API_URL = "https://script.google.com/macros/s/AKfycbz5zkASUR1Ye1ZzYvPDvq4VhZegvZHzG5vdczLEaahcw_NDO2D9vb_4sGVYFrjrHzc/exec";
         const firebaseConfig = { apiKey: "AIzaSyDy3k1AoEKeuCKjmFxefn9fapeqv2Le1_w", authDomain: "hsaban94-cc777.firebaseapp.com", projectId: "hsaban94-cc777", storageBucket: "hsaban94-cc777.appspot.com", messagingSenderId: "299206369469", appId: "1:299206369469:web:7527baa329def3a29457d4" };
         
@@ -179,6 +186,7 @@
         let mapInstances = {};
         const dom = {};
 
+        // ========== 2. APP INITIALIZATION ==========
         function initApp() {
             document.body.classList.add('loaded');
             cacheDomElements();
@@ -213,6 +221,8 @@
              dom.date = document.getElementById('date');
              dom.helpFab = document.querySelector('.help-fab');
              dom.helpModal = document.getElementById('help-modal');
+             dom.historyContent = document.getElementById('history-content');
+             dom.chatContent = document.getElementById('chat-content');
         }
 
         function initFirebaseAndPWA() { 
@@ -223,6 +233,7 @@
             } catch (e) { console.error("PWA Init Error", e); }
         }
         
+        // ========== 3. DATA & API HANDLING ==========
         async function loadClientData(clientId, isRefresh = false) {
             try {
                 const data = await apiPost({ action: 'getClientData', identifier: clientId });
@@ -238,7 +249,7 @@
                     navigateTo('page-home', true);
                     renderAllPages();
                     dom.helpFab.style.display = 'block';
-                } else {
+                } else { // Handle periodic refresh
                     renderHeaderAndGreeting();
                     renderHomePage();
                     renderContainersPage();
@@ -247,7 +258,7 @@
             } catch (error) {
                 console.error("Failed to load client data:", error);
                 localStorage.removeItem('saban_client_id');
-                dom.splashScreen.style.display = 'none'; // FIX: Hide splash on error
+                dom.splashScreen.style.display = 'none';
                 promptForClientId();
                 showToast("שגיאה בטעינת נתונים. אנא נסה שוב.", 'error');
             }
@@ -255,7 +266,7 @@
         
         async function apiPost(body) {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+            const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
             try {
                 const response = await fetch(API_URL, { 
                     method: 'POST', 
@@ -272,6 +283,7 @@
             }
         }
         
+        // ========== 4. UI RENDERING & ANIMATIONS ==========
         function promptForClientId() {
             dom.splashScreen.style.display = 'none';
             const modalHTML = `
@@ -282,8 +294,7 @@
                         <input type="text" id="login-identifier" placeholder="מספר לקוח / טלפון" required style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 16px; margin-bottom: 15px;">
                         <button type="submit" class="btn" style="width: 100%;">התחבר</button>
                     </form>
-                </div>
-            `;
+                </div>`;
             dom.modalContainer.innerHTML = modalHTML;
             dom.modalContainer.classList.add('show');
             
@@ -292,7 +303,7 @@
                 const identifier = document.getElementById('login-identifier').value.trim();
                 if (identifier) {
                     dom.modalContainer.classList.remove('show');
-                    dom.splashScreen.style.display = 'flex'; // Show splash again while loading
+                    dom.splashScreen.style.display = 'flex';
                     loadClientData(identifier);
                 }
             });
@@ -341,6 +352,14 @@
             dom.navButtons.forEach(b => b.classList.toggle('active', b.dataset.page === pageId));
         }
 
+        function renderAllPages() {
+            renderHeaderAndGreeting();
+            renderHomePage();
+            renderContainersPage();
+            renderHistoryPage();
+            renderChatPage();
+        }
+
         function renderHeaderAndGreeting() {
             const defaultAvatar = "https://img.icons8.com/?size=100&id=sJYpLlZc7gbX&format=png&color=000000";
             dom.clientNameHeader.textContent = clientState.name;
@@ -348,12 +367,6 @@
             const hour = new Date().getHours();
             let greetingText = (hour < 12) ? "בוקר טוב" : (hour < 18) ? "צהריים טובים" : "ערב טוב";
             dom.greeting.textContent = `${greetingText}, ${clientState.name.split(' ')[0]}`;
-        }
-
-        function renderAllPages() {
-            renderHeaderAndGreeting();
-            renderHomePage();
-            renderContainersPage();
         }
 
         function renderHomePage() {
@@ -385,6 +398,36 @@
                 container.appendChild(cardElement);
                 setTimeout(() => renderLeafletMap(cardElement.querySelector('.mini-map-container'), order['כתובת']), 100);
             });
+        }
+        
+        function renderHistoryPage() {
+            dom.historyContent.innerHTML = `<canvas id="historyChart"></canvas><div style="overflow-x: auto; margin-top: 20px;"><table style="width: 100%; border-collapse: collapse;"><thead><tr><th style="padding: 10px; border-bottom: 1px solid var(--border);">תעודה</th><th style="padding: 10px; border-bottom: 1px solid var(--border);">תאריך</th><th style="padding: 10px; border-bottom: 1px solid var(--border);">פעולה</th><th style="padding: 10px; border-bottom: 1px solid var(--border);">כתובת</th></tr></thead><tbody id="history-table-body"></tbody></table></div>`;
+            
+            const monthlyData = clientState.orders.reduce((acc, order) => {
+                const date = new Date(order['תאריך הזמנה']);
+                if(date) {
+                   const month = date.toLocaleDateString('he-IL', { year: '2-digit', month: 'short' });
+                   acc[month] = (acc[month] || 0) + 1;
+                }
+                return acc;
+            }, {});
+            new Chart(document.getElementById('historyChart'), { type: 'bar', data: { labels: Object.keys(monthlyData), datasets: [{ label: 'כמות הזמנות', data: Object.values(monthlyData), backgroundColor: '#0b72b9', borderRadius: 5 }] }, options: { plugins: { legend: { display: false } } } });
+            
+            const tableBody = document.getElementById('history-table-body');
+            tableBody.innerHTML = clientState.orders.map(order => `<tr><td style="padding: 12px;">${order['מספר תעודה'] || ''}</td><td>${new Date(order['תאריך הזמנה'])?.toLocaleDateString('he-IL') || ''}</td><td>${order['סוג פעולה'] || ''}</td><td>${order['כתובת'] || ''}</td></tr>`).join('');
+        }
+
+        function renderChatPage() {
+            const templates = {
+                "שאלות נפוצות": ["מה צפי ההגעה של הנהג?", "האם ניתן להאריך את זמן השהייה?"],
+                "בקשות פינוי": ["המכולה מלאה, אשמח לתאם פינוי.", "פינוי דחוף, נא צרו קשר."],
+            };
+            let html = '';
+            for (const category in templates) {
+                html += `<p style="font-weight: 600; margin-top: 15px; margin-bottom: 5px;">${category}</p>`;
+                html += templates[category].map(t => `<button class="btn secondary" data-action="chat-template" style="width: 100%; justify-content: flex-start; text-align: right; margin-bottom: 5px;">${t}</button>`).join('');
+            }
+             dom.chatContent.innerHTML = `<div id="chat-templates">${html}</div><form id="chat-form" style="margin-top: 20px;"><label for="chat-message">או כתוב הודעה חופשית: 👋</label><textarea id="chat-message" required placeholder="כתוב כאן את הודעתך..." style="width:100%; height:80px; padding:10px; border-radius:8px; border:1px solid var(--border); margin-top:5px;"></textarea><button type="submit" class="btn" style="width:100%; margin-top: 10px;">שלח הודעה</button></form>`;
         }
         
         function createContainerCardElement(order) {
@@ -424,6 +467,7 @@
             return card;
         }
         
+        // ========== 5. EVENT HANDLING ==========
         async function sendClientRequest(requestType, details) {
              try {
                 showToast("שולח בקשה...");
@@ -455,8 +499,35 @@
             };
         }
 
-        function renderLeafletMap(container, address) { /* ... same as before */ }
-        function showToast(message, type = 'info') { /* ... same as before */ }
+        function renderLeafletMap(container, address) { 
+             if (!container || !address) return;
+            const mapId = container.id;
+            if (mapInstances[mapId]) mapInstances[mapId].remove();
+            container.innerHTML = '<div style="text-align:center; padding-top: 50px; color: var(--text-muted);">טוען מפה...</div>';
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.length > 0) {
+                        container.innerHTML = '';
+                        const { lat, lon } = data[0];
+                        const map = L.map(container, { zoomControl: false, scrollWheelZoom: false, dragging: false, doubleClickZoom: false }).setView([lat, lon], 15);
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+                        L.marker([lat, lon]).addTo(map);
+                        mapInstances[mapId] = map;
+                    } else { container.innerHTML = 'כתובת לא נמצאה.'; }
+                }).catch(err => { container.innerHTML = 'שגיאה בטעינת מפה.'; });
+        }
+        function showToast(message, type = 'info') { 
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            dom.toastContainer.appendChild(toast);
+            setTimeout(() => toast.classList.add('show'), 100);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                toast.addEventListener('transitionend', () => toast.remove());
+            }, 3000);
+        }
         
         function setupEventListeners() {
             dom.body.addEventListener('click', (e) => {
@@ -474,6 +545,9 @@
                     case 'toggle-profile': dom.profileContainer.classList.toggle('active'); break;
                     case 'logout': localStorage.clear(); window.location.reload(); break;
                     case 'new-order': openOrderModal('הזמנה חדשה'); break;
+                    case 'chat-template': 
+                        document.getElementById('chat-message').value = actionElement.textContent;
+                        break;
                     case 'request-swap': case 'request-pickup': {
                         const orderId = actionElement.dataset.orderId;
                         const order = clientState.orders.find(o => o['מספר תעודה'] == orderId);
@@ -482,11 +556,22 @@
                     }
                 }
             });
-        }
 
+            dom.body.addEventListener('submit', e => {
+                if (e.target.id === 'chat-form') {
+                    e.preventDefault();
+                    const msgInput = document.getElementById('chat-message');
+                    if (msgInput.value.trim()) {
+                        sendClientRequest('הודעת צאט', msgInput.value.trim());
+                        msgInput.value = '';
+                    }
+                }
+            });
+        }
+        
+        // ========== 6. START APP ==========
         initApp();
     });
     </script>
 </body>
 </html>
-

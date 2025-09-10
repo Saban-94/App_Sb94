@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ניהול הזמנות - ח.סבן</title>
+    <link rel="icon" href="https://i.postimg.cc/2SbDgD1B/1.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        :root {
+            --brand: #0b72b9; --accent: #ff9f1c; --bg: #f0f2f5; --card: #ffffff;
+            --text-dark: #1a202c; --text-light: #4a5568; --text-muted: #718096;
+            --border: #e2e8f0; --success: #38a169; --warning: #dd6b20; --danger: #e53e3e;
+            --radius: 16px; --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes popIn { 0% { transform: scale(0.95); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes overdue-pulse { 0% { background-color: rgba(229, 62, 62, 0.05); } 50% { background-color: rgba(229, 62, 62, 0.15); } 100% { background-color: rgba(229, 62, 62, 0.05); } }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Assistant', sans-serif; background-color: var(--bg); color: var(--text-dark); }
+        .dashboard-container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        .dashboard-header { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 15px 25px; border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 20px; }
+        .header-title { font-size: 24px; font-weight: 700; }
+        .header-clock { font-size: 18px; font-weight: 600; text-align: left; }
+        
+        .online-users { margin-bottom: 20px; }
+        .online-users h3 { margin-bottom: 10px; }
+        .users-list { display: flex; gap: 15px; overflow-x: auto; padding-bottom: 10px; }
+        .user-chip { display: flex; align-items: center; gap: 8px; background: var(--card); padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border); font-weight: 600; }
+        .user-avatar { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; }
+        .online-indicator { width: 10px; height: 10px; background: var(--success); border-radius: 50%; border: 2px solid var(--card); }
+
+        .card { background-color: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 20px; border: 1px solid var(--border); overflow: hidden; }
+        .table-container { overflow-x: auto; }
+        .requests-table { width: 100%; border-collapse: collapse; }
+        .requests-table th, .requests-table td { padding: 15px; text-align: right; border-bottom: 1px solid var(--border); }
+        .requests-table th { font-size: 14px; color: var(--text-muted); }
+        .requests-table tr { transition: background-color 0.2s; }
+        .requests-table tr:hover { background-color: #f7fafc; }
+        .request-row { cursor: pointer; }
+        .status-badge { padding: 4px 10px; border-radius: 12px; font-weight: 700; font-size: 12px; }
+        .status-new { background-color: #e6f7ff; color: #0062a3; }
+        .status-overdue { animation: overdue-pulse 2s infinite; color: var(--danger); font-weight: bold; }
+        
+        .btn { background: var(--brand); color: white; border: none; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; }
+        .btn:hover { opacity: 0.9; }
+        
+        .modal-overlay { position: fixed; inset: 0; background-color: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 2000; opacity: 0; visibility: hidden; transition: opacity 0.3s; backdrop-filter: blur(5px); }
+        .modal-overlay.show { opacity: 1; visibility: visible; }
+        .modal-content { background-color: var(--bg); padding: 0; border-radius: var(--radius); width: 90%; max-width: 800px; animation: popIn 0.3s; box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37); display: flex; flex-direction: column; max-height: 90vh; }
+        .modal-header { padding: 20px; font-size: 20px; font-weight: 700; background: var(--card); border-bottom: 1px solid var(--border); }
+        .modal-body { flex-grow: 1; padding: 20px; overflow-y: auto; }
+        .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .detail-card { background: var(--card); padding: 15px; border-radius: 12px; }
+        #detail-map { height: 250px; width: 100%; border-radius: 12px; margin-top: 15px; }
+        
+        .message-templates { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin-bottom: 20px;}
+        .template-btn { background: var(--card); border: 1px solid var(--border); text-align: right; width: 100%; padding: 10px; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+        .template-btn:hover { background: #e6f7ff; border-color: var(--brand); }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <header class="dashboard-header">
+            <h1 class="header-title">לוח בקרה - מחלקת הזמנות</h1>
+            <div class="header-clock">
+                <div id="clock"></div>
+                <div id="date" style="font-size: 14px; color: var(--text-muted);"></div>
+            </div>
+        </header>
+
+        <div class="online-users">
+            <h3>לקוחות מחוברים</h3>
+            <div class="users-list" id="online-users-list">
+                <!-- User chips will be inserted here -->
+            </div>
+        </div>
+
+        <main class="card">
+            <div class="table-container">
+                <table class="requests-table">
+                    <thead>
+                        <tr>
+                            <th>סטטוס</th>
+                            <th>שם לקוח</th>
+                            <th>סוג בקשה</th>
+                            <th>פרטים</th>
+                            <th>תאריך</th>
+                            <th>פעולות</th>
+                        </tr>
+                    </thead>
+                    <tbody id="requests-table-body">
+                        <!-- Request rows will be inserted here -->
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <div id="modal-container" class="modal-overlay"></div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const API_URL = "https://script.google.com/macros/s/AKfycbz5zkASUR1Ye1ZzYvPDvq4VhZegvZHzG5vdczLEaahcw_NDO2D9vb_4sGVYFrjrHzc/exec";
+        let dashboardState = { requests: [], onlineUsers: [] };
+        const dom = {
+            clock: document.getElementById('clock'),
+            date: document.getElementById('date'),
+            onlineUsersList: document.getElementById('online-users-list'),
+            requestsTableBody: document.getElementById('requests-table-body'),
+            modalContainer: document.getElementById('modal-container')
+        };
+        let detailMap;
+
+        function initAdminDashboard() {
+            updateClock();
+            setInterval(updateClock, 1000);
+            loadAdminData();
+            setInterval(loadAdminData, 30000); // Refresh every 30 seconds
+            setupEventListeners();
+        }
+
+        async function loadAdminData() {
+            try {
+                const data = await apiPost({ action: 'getAdminData' });
+                dashboardState.requests = data.requests || [];
+                dashboardState.onlineUsers = data.onlineUsers || [];
+                renderDashboard();
+            } catch (error) {
+                console.error("Error loading admin data:", error);
+            }
+        }
+
+        async function apiPost(body) {
+            const response = await fetch(API_URL, { method: 'POST', mode: 'cors', body: JSON.stringify(body) });
+            if (!response.ok) throw new Error("Network response was not ok.");
+            return await response.json();
+        }
+
+        function updateClock() {
+            const now = new Date();
+            dom.clock.textContent = now.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+            dom.date.textContent = now.toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long' });
+        }
+        
+        function renderDashboard() {
+            renderOnlineUsers();
+            renderRequestsTable();
+        }
+        
+        function renderOnlineUsers() {
+            dom.onlineUsersList.innerHTML = dashboardState.onlineUsers.map(user => `
+                <div class="user-chip">
+                    <img src="${user.avatar || 'https://img.icons8.com/?size=100&id=Ry7mumEprV9w&format=png&color=000000'}" class="user-avatar" alt="${user.name}">
+                    <span>${user.name}</span>
+                    <div class="online-indicator"></div>
+                </div>
+            `).join('');
+        }
+
+        function renderRequestsTable() {
+            const sortedRequests = [...dashboardState.requests].sort((a, b) => {
+                if (a.isOverdue && !b.isOverdue) return -1;
+                if (!a.isOverdue && b.isOverdue) return 1;
+                return new Date(b.timestamp) - new Date(a.timestamp);
+            });
+
+            dom.requestsTableBody.innerHTML = sortedRequests.map(req => `
+                <tr class="request-row ${req.isOverdue ? 'status-overdue' : ''}" data-action="show-details" data-request-id="${req.id}">
+                    <td><span class="status-badge status-${req.status === 'חדש' ? 'new' : ''}">${req.status}</span> ${req.isOverdue ? '<strong>בחריגה</strong>' : ''}</td>
+                    <td>${req.clientName}</td>
+                    <td>${req.requestType}</td>
+                    <td>${req.details.substring(0, 50)}...</td>
+                    <td>${new Date(req.timestamp).toLocaleString('he-IL')}</td>
+                    <td><button class="btn" data-action="open-message-modal" data-request-id="${req.id}">שלח הודעה</button></td>
+                </tr>
+            `).join('');
+        }
+
+        function openDetailModal(requestId) {
+            const request = dashboardState.requests.find(r => r.id == requestId);
+            if (!request) return;
+
+            dom.modalContainer.innerHTML = `
+                <div class="modal-content">
+                    <header class="modal-header">פרטי בקשה - ${request.clientName}</header>
+                    <div class="modal-body">
+                        <div class="modal-grid">
+                            <div class="detail-card">
+                                <h4>פרטי הבקשה</h4>
+                                <p><strong>סוג:</strong> ${request.requestType}</p>
+                                <p><strong>תאריך:</strong> ${new Date(request.timestamp).toLocaleString('he-IL')}</p>
+                                <p><strong>פרטים:</strong> ${request.details}</p>
+                                <p><strong>סטטוס:</strong> ${request.status}</p>
+                            </div>
+                             <div class="detail-card">
+                                <h4>פרטי לקוח</h4>
+                                <p><strong>שם:</strong> ${request.clientName}</p>
+                                <p><strong>מספר לקוח:</strong> ${request.clientId}</p>
+                                <p><strong>כתובת למשלוח:</strong> ${request.address || 'לא צוין'}</p>
+                                <div id="detail-map"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            dom.modalContainer.classList.add('show');
+            setTimeout(() => renderLeafletMap('detail-map', request.address), 100);
+        }
+        
+        async function openMessageModal(requestId) {
+            const request = dashboardState.requests.find(r => r.id == requestId);
+            if (!request) return;
+            
+            // Assuming templates are fetched from another API call or are static
+            const templates = [
+                { title: "אישור קבלה", text: `שלום ${request.clientName}, בקשתך התקבלה והיא בטיפול.`},
+                { title: "נהג בדרך", text: `שלום ${request.clientName}, הנהג בדרך אליך לביצוע ${request.requestType}.`},
+                { title: "עדכון ETA", text: `שלום ${request.clientName}, זמן ההגעה המשוער הוא [הכנס שעה].`},
+                { title: "חריגה", text: `שלום ${request.clientName}, שימ/י לב שהמכולה בכתובת [כתובת] נמצאת בחריגה.`},
+                { title: "צריך מיקום", text: `שלום ${request.clientName}, נשמח לקבל מיקום מדויק בווטסאפ.`},
+            ];
+
+            dom.modalContainer.innerHTML = `
+                 <div class="modal-content">
+                    <header class="modal-header">שליחת הודעה אל ${request.clientName}</header>
+                    <div class="modal-body">
+                        <h4>בחר תבנית הודעה</h4>
+                        <div class="message-templates">
+                            ${templates.map(t => `<button class="template-btn" data-text="${t.text}">${t.title}</button>`).join('')}
+                        </div>
+                        <textarea id="message-text" style="width: 100%; height: 100px; padding: 10px; border-radius: 8px; border: 1px solid var(--border);" placeholder="ערוך הודעה כאן..."></textarea>
+                        <div style="text-align: left; margin-top: 20px;">
+                            <button id="send-message-btn" class="btn">שלח התראה לאפליקציה</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            dom.modalContainer.classList.add('show');
+
+            dom.modalContainer.querySelectorAll('.template-btn').forEach(btn => {
+                btn.onclick = () => {
+                    document.getElementById('message-text').value = btn.dataset.text;
+                };
+            });
+            
+            document.getElementById('send-message-btn').onclick = async () => {
+                const message = document.getElementById('message-text').value;
+                if (!message) return;
+                try {
+                    await apiPost({ action: 'sendMessageToClient', clientId: request.clientId, message: message });
+                    alert('ההודעה נשלחה בהצלחה');
+                    dom.modalContainer.classList.remove('show');
+                } catch(err) {
+                    alert('שגיאה בשליחת ההודעה');
+                }
+            };
+        }
+
+        function renderLeafletMap(containerId, address) {
+            const container = document.getElementById(containerId);
+            if(!container || !address) return;
+            if (detailMap) { detailMap.remove(); }
+            detailMap = L.map(container, { zoomControl: false }).setView([32.0853, 34.7818], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(detailMap);
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`)
+                .then(res => res.json()).then(data => {
+                    if (data && data.length > 0) {
+                        const { lat, lon } = data[0];
+                        detailMap.setView([lat, lon], 16);
+                        L.marker([lat, lon]).addTo(detailMap);
+                    }
+                });
+        }
+
+        function setupEventListeners() {
+            dom.requestsTableBody.addEventListener('click', e => {
+                const row = e.target.closest('tr');
+                const button = e.target.closest('button');
+                if (button) {
+                    e.stopPropagation();
+                    const action = button.dataset.action;
+                    const requestId = button.closest('tr').dataset.requestId;
+                    if (action === 'open-message-modal') {
+                        openMessageModal(requestId);
+                    }
+                } else if (row) {
+                    const action = row.dataset.action;
+                    const requestId = row.dataset.requestId;
+                    if (action === 'show-details') {
+                        openDetailModal(requestId);
+                    }
+                }
+            });
+
+            dom.modalContainer.addEventListener('click', e => {
+                if (e.target === dom.modalContainer) {
+                    dom.modalContainer.classList.remove('show');
+                }
+            });
+        }
+
+        initAdminDashboard();
+    });
+    </script>
+</body>
+</html>

@@ -6,7 +6,7 @@
     <title>אזור אישי - ח.סבן</title>
     <meta name="theme-color" content="#0b72b9"/>
     <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="https://ui-avatars.com/api/?name=HS&size=192&background=0b72b9&color=fff">
+    <link rel="apple-touch-icon" href="https://i.postimg.cc/2SbDgD1B/1.png">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📦</text></svg>">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -58,6 +58,7 @@
         .card { background-color: var(--card); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); margin-bottom: 20px; border: 1px solid var(--border); animation: popIn 0.5s ease-out forwards; }
         .btn { background: var(--brand); color: white; border: none; padding: 12px 18px; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 15px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; }
         .btn:active { transform: scale(0.95); }
+        .btn.secondary { background-color: var(--bg); color: var(--text-dark); border: 1px solid var(--border); }
         
         .modal-overlay { position: fixed; inset: 0; background-color: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 2000; opacity: 0; visibility: hidden; transition: opacity 0.3s; backdrop-filter: blur(5px); }
         .modal-overlay.show { opacity: 1; visibility: visible; }
@@ -89,13 +90,25 @@
         
         .request-history { margin-top: 20px; border-top: 1px solid var(--border); padding-top: 15px; }
         .request-history-item { display: flex; justify-content: space-between; padding: 8px 0; font-size: 14px; }
+        
+        .profile-container { position: relative; cursor: pointer; }
+        .profile-avatar { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--border); transition: transform 0.2s; }
+        .logout-popup { position: absolute; top: 50px; left: 0; background: var(--card); border-radius: 10px; box-shadow: var(--shadow); padding: 5px; opacity: 0; visibility: hidden; transition: opacity 0.2s, transform 0.2s; transform: translateY(10px); z-index: 10; }
+        .profile-container.active .logout-popup { opacity: 1; visibility: visible; transform: translateY(0); }
+        .logout-btn { background: none; border: none; padding: 8px 12px; font-weight: 600; color: var(--danger); display: flex; align-items: center; gap: 5px; cursor: pointer; }
     </style>
 </head>
 <body>
     <div class="app-shell" style="display: none;">
         <header class="app-header">
              <div id="profile-container" class="profile-container">
-                <img id="profile-avatar" src="" alt="Profile" style="width: 40px; height: 40px; border-radius: 50%;">
+                <img id="profile-avatar" src="" alt="Profile" class="profile-avatar">
+                <div class="logout-popup">
+                    <button data-action="logout" class="logout-btn">
+                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0v2z"/><path fill-rule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3z"/></svg>
+                        <span>התנתק</span>
+                    </button>
+                </div>
             </div>
             <div style="text-align: center; font-weight: 600;">
                 <div id="clock"></div>
@@ -105,7 +118,14 @@
         </header>
 
         <main class="app-container" id="app-container">
-            <div id="page-home" class="page"><h1 class="page-title" id="greeting"></h1><div id="eta-card-container"></div><div id="active-orders-container"></div></div>
+            <div id="page-home" class="page">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+                    <h1 class="page-title" id="greeting" style="margin-bottom: 0;"></h1>
+                    <button class="btn" data-action="new-order"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/></svg> הזמן חדשה</button>
+                </div>
+                <div id="eta-card-container"></div>
+                <div id="active-orders-container"></div>
+            </div>
             <div id="page-containers" class="page"><h1 class="page-title">המכולות שלי</h1><div id="containers-list"></div></div>
             <div id="page-history" class="page"><h1 class="page-title">היסטוריה</h1><div id="history-content"></div></div>
             <div id="page-chat" class="page"><h1 class="page-title">צ'אט</h1><div id="chat-content"></div></div>
@@ -131,21 +151,21 @@
                 <p>האפליקציה מאפשרת לכם לנהל את המכולות וההזמנות שלכם בקלות ובמהירות, ישירות מהנייד.</p>
              </div>
              <div class="card">
-                <h4><g-emoji class="g-emoji" alias="house" fallback-src="https://github.githubassets.com/images/icons/emoji/unicode/1f3e0.png">🏠</g-emoji> דף הבית</h4>
+                <h4>🏠 דף הבית</h4>
                 <p>כאן תראו את המכולה הפעילה הבאה שלכם או את צפי ההגעה של נהג במידה ויש הזמנה בדרך. תוכלו לבצע הזמנה חדשה במהירות.</p>
              </div>
              <div class="card">
-                <h4><g-emoji class="g-emoji" alias="package" fallback-src="https://github.githubassets.com/images/icons/emoji/unicode/1f4e6.png">📦</g-emoji> המכולות שלי</h4>
+                <h4>📦 המכולות שלי</h4>
                 <p>עמוד זה מציג את כל המכולות שנמצאות אצלכם באתר. כל כרטיס מציג את מיקום המכולה, התקדמות ימי השכירות, והיסטוריית הבקשות האחרונות. מכאן תוכלו לבקש פינוי או החלפה.</p>
              </div>
              <div class="card">
-                <h4><g-emoji class="g-emoji" alias="chart_with_upwards_trend" fallback-src="https://github.githubassets.com/images/icons/emoji/unicode/1f4c8.png">📈</g-emoji> היסטוריה</h4>
+                <h4>📈 היסטוריה</h4>
                 <p>צפו בגרף של כלל ההזמנות שלכם לאורך זמן ובטבלה מפורטת של כל הפעולות שבוצעו.</p>
              </div>
         </div>
     </div>
     
-    <div id="splash-screen"><div id="splash-logo"><img src="https://i.postimg.cc/2SbDgD1B/1.png" alt="לוגו ח.סבן" style="width: 80%; height: auto;"></div><div class="glass-door" id="door-left"></div><div class="glass-door" id="door-right"></div></div>
+    <div id="splash-screen"><div id="splash-logo"><img src="https://i.postimg.cc/2SbDgD1B/1.png" alt="לוגו ח.סבן" style="width: 80%; height: auto; border-radius: 50%;"></div><div class="glass-door" id="door-left"></div><div class="glass-door" id="door-right"></div></div>
     <div id="toast-container"></div>
     <div id="modal-container" class="modal-overlay"></div>
 
@@ -154,9 +174,8 @@
         const API_URL = "https://script.google.com/macros/s/AKfycbz5zkASUR1Ye1ZzYvPDvq4VhZegvZHzG5vdczLEaahcw_NDO2D9vb_4sGVYFrjrHzc/exec";
         const firebaseConfig = { apiKey: "AIzaSyDy3k1AoEKeuCKjmFxefn9fapeqv2Le1_w", authDomain: "hsaban94-cc777.firebaseapp.com", projectId: "hsaban94-cc777", storageBucket: "hsaban94-cc777.appspot.com", messagingSenderId: "299206369469", appId: "1:299206369469:web:7527baa329def3a29457d4" };
         
-        let clientState = { id: null, name: null, orders: [] };
+        let clientState = { id: null, name: null, avatar: null, orders: [], addresses: new Set() };
         let currentPageId = 'page-home';
-        let deferredPwaPrompt;
         let mapInstances = {};
         const dom = {};
 
@@ -188,6 +207,7 @@
              dom.etaCardContainer = document.getElementById('eta-card-container');
              dom.greeting = document.getElementById('greeting');
              dom.clientNameHeader = document.getElementById('client-name-header');
+             dom.profileContainer = document.getElementById('profile-container');
              dom.profileAvatar = document.getElementById('profile-avatar');
              dom.clock = document.getElementById('clock');
              dom.date = document.getElementById('date');
@@ -195,14 +215,20 @@
              dom.helpModal = document.getElementById('help-modal');
         }
 
-        function initFirebaseAndPWA() { /* ... same as before */ }
+        function initFirebaseAndPWA() { 
+            try {
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.register('service-worker.js').catch(err => console.error('SW registration failed', err));
+                }
+            } catch (e) { console.error("PWA Init Error", e); }
+        }
         
         async function loadClientData(clientId, isRefresh = false) {
             try {
                 const data = await apiPost({ action: 'getClientData', identifier: clientId });
                 if (data.status === 'error' || !data.clientName) throw new Error(data.message || "Client not found");
                 
-                clientState = { ...clientState, id: data.clientId, name: data.clientName, orders: data.orders || [] };
+                clientState = { ...clientState, id: data.clientId, name: data.clientName, avatar: data.avatarUrl, orders: data.orders || [], addresses: new Set(data.orders.map(o => o['כתובת']).filter(Boolean)) };
                 localStorage.setItem('saban_client_id', data.clientId);
                 
                 if (!isRefresh) {
@@ -213,6 +239,7 @@
                     renderAllPages();
                     dom.helpFab.style.display = 'block';
                 } else {
+                    renderHeaderAndGreeting();
                     renderHomePage();
                     renderContainersPage();
                 }
@@ -220,14 +247,56 @@
             } catch (error) {
                 console.error("Failed to load client data:", error);
                 localStorage.removeItem('saban_client_id');
-                showToast("שגיאה בטעינת נתוני לקוח.", 'error');
+                dom.splashScreen.style.display = 'none'; // FIX: Hide splash on error
                 promptForClientId();
+                showToast("שגיאה בטעינת נתונים. אנא נסה שוב.", 'error');
             }
         }
         
-        async function apiPost(body) { /* ... same as before */ }
-        function promptForClientId() { /* ... same as before */ }
-        function receiveNotification(payload) { /* ... same as before */ }
+        async function apiPost(body) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+            try {
+                const response = await fetch(API_URL, { 
+                    method: 'POST', 
+                    mode: 'cors', 
+                    body: JSON.stringify(body),
+                    signal: controller.signal 
+                });
+                clearTimeout(timeoutId);
+                if (!response.ok) throw new Error(`Network error`);
+                return await response.json();
+            } catch(error) {
+                clearTimeout(timeoutId);
+                throw error;
+            }
+        }
+        
+        function promptForClientId() {
+            dom.splashScreen.style.display = 'none';
+            const modalHTML = `
+                <div class="modal-content">
+                    <h3>ברוכים הבאים</h3>
+                    <p style="color: var(--text-light); margin: 10px 0 20px 0;">כדי להתחבר, אנא הזן מספר לקוח או טלפון.</p>
+                    <form id="login-form">
+                        <input type="text" id="login-identifier" placeholder="מספר לקוח / טלפון" required style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 16px; margin-bottom: 15px;">
+                        <button type="submit" class="btn" style="width: 100%;">התחבר</button>
+                    </form>
+                </div>
+            `;
+            dom.modalContainer.innerHTML = modalHTML;
+            dom.modalContainer.classList.add('show');
+            
+            document.getElementById('login-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const identifier = document.getElementById('login-identifier').value.trim();
+                if (identifier) {
+                    dom.modalContainer.classList.remove('show');
+                    dom.splashScreen.style.display = 'flex'; // Show splash again while loading
+                    loadClientData(identifier);
+                }
+            });
+        }
         
         function updateClock() {
             const now = new Date();
@@ -235,64 +304,66 @@
             dom.date.textContent = now.toLocaleDateString('he-IL', { weekday: 'long', day: '2-digit', month: '2-digit' });
         }
 
-        async function playSplashScreenAnimation() { /* ... same as before */ }
+        async function playSplashScreenAnimation() {
+            return new Promise(resolve => {
+                setTimeout(() => { dom.splashScreen.classList.add('opening'); }, 500);
+                setTimeout(() => {
+                    dom.splashScreen.style.opacity = '0';
+                    dom.splashScreen.addEventListener('transitionend', () => {
+                        dom.splashScreen.style.display = 'none';
+                        resolve();
+                    }, { once: true });
+                }, 1700);
+            });
+        }
         
         function navigateTo(pageId, isInitial = false) {
-            if (!isInitial && currentPageId === pageId) return;
-
+             if (!isInitial && currentPageId === pageId) return;
             const oldPage = document.getElementById(currentPageId);
             const newPage = document.getElementById(pageId);
             if (!newPage) return;
 
-            if (isInitial) {
-                newPage.classList.add('active');
-            } else {
+            if (isInitial) { newPage.classList.add('active'); } 
+            else {
                 const oldPageIndex = Array.from(dom.pages).findIndex(p => p.id === currentPageId);
                 const newPageIndex = Array.from(dom.pages).findIndex(p => p.id === pageId);
                 const isForward = newPageIndex > oldPageIndex;
-                
-                oldPage.classList.remove('active');
                 oldPage.classList.add(isForward ? 'exit-to-left' : 'exit-to-right');
-                
                 newPage.classList.add(isForward ? 'enter-from-right' : 'enter-from-left');
                 void newPage.offsetWidth; 
                 newPage.classList.add('active');
-                newPage.classList.remove('enter-from-left', 'enter-from-right');
-                
                 oldPage.addEventListener('transitionend', () => {
-                    oldPage.classList.remove('exit-to-left', 'exit-to-right');
+                    oldPage.classList.remove('active', 'exit-to-left', 'exit-to-right');
+                    newPage.classList.remove('enter-from-left', 'enter-from-right');
                 }, { once: true });
             }
-
             currentPageId = pageId;
             dom.navButtons.forEach(b => b.classList.toggle('active', b.dataset.page === pageId));
         }
 
-        function renderHeaderAndGreeting() { /* ... same as before */ }
+        function renderHeaderAndGreeting() {
+            const defaultAvatar = "https://img.icons8.com/?size=100&id=sJYpLlZc7gbX&format=png&color=000000";
+            dom.clientNameHeader.textContent = clientState.name;
+            dom.profileAvatar.src = clientState.avatar || defaultAvatar;
+            const hour = new Date().getHours();
+            let greetingText = (hour < 12) ? "בוקר טוב" : (hour < 18) ? "צהריים טובים" : "ערב טוב";
+            dom.greeting.textContent = `${greetingText}, ${clientState.name.split(' ')[0]}`;
+        }
 
         function renderAllPages() {
             renderHeaderAndGreeting();
             renderHomePage();
             renderContainersPage();
-            // You can add renderHistoryPage() and renderChatPage() here if they need to be pre-rendered
         }
 
         function renderHomePage() {
             const activeOnSite = clientState.orders.filter(o => o['סטטוס'] !== 'סגור' && o['מכולה ירדה']);
             const upcomingOrders = clientState.orders.filter(o => o['סטטוס'] !== 'סגור' && !o['מכולה ירדה']);
-
             if (upcomingOrders.length > 0) {
                 const order = upcomingOrders[0];
                 const eta = order['זמן הגעה משוער'] ? new Date(order['זמן הגעה משוער']) : null;
-                dom.etaCardContainer.innerHTML = `
-                    <div class="card" style="background: linear-gradient(135deg, #e6f7ff, #e0f2f1);">
-                        <div style="color: var(--brand);">${order['שם נהג'] ? `הנהג ${order['שם נהג']} בדרך` : 'הזמנה בדרך'}</div>
-                        <div style="font-weight: 700;">צפי הגעה: ${eta ? eta.toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'}) : 'טרם עודכן'}</div>
-                    </div>`;
-            } else {
-                dom.etaCardContainer.innerHTML = '';
-            }
-
+                dom.etaCardContainer.innerHTML = `<div class="card" style="background: linear-gradient(135deg, #e6f7ff, #e0f2f1);"><div style="color: var(--brand);">${order['שם נהג'] ? `הנהג ${order['שם נהג']} בדרך` : 'הזמנה בדרך'}</div><div style="font-weight: 700;">צפי הגעה: ${eta ? eta.toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'}) : 'טרם עודכן'}</div></div>`;
+            } else { dom.etaCardContainer.innerHTML = ''; }
             const container = dom.activeOrdersContainer;
             container.innerHTML = '';
             if (activeOnSite.length > 0) {
@@ -300,7 +371,7 @@
                 container.appendChild(cardElement);
                 renderLeafletMap(cardElement.querySelector('.mini-map-container'), activeOnSite[0]['כתובת']);
             } else if (upcomingOrders.length === 0) {
-                container.innerHTML = '<div class="card">אין מכולות פעילות כרגע.</div>';
+                container.innerHTML = '<div class="card" style="text-align:center;"><p>אין לך כרגע הזמנות פעילות.</p></div>';
             }
         }
 
@@ -308,10 +379,7 @@
             const activeOnSite = clientState.orders.filter(o => o['סטטוס'] !== 'סגור' && o['מכולה ירדה']);
             const container = dom.containersList;
             container.innerHTML = '';
-            if (activeOnSite.length === 0) {
-                container.innerHTML = '<div class="card">אין מכולות פעילות כרגע.</div>';
-                return;
-            }
+            if (activeOnSite.length === 0) { container.innerHTML = '<div class="card" style="text-align:center;"><p>אין לך מכולות פעילות כרגע.</p></div>'; return; }
             activeOnSite.forEach(order => {
                 const cardElement = createContainerCardElement(order);
                 container.appendChild(cardElement);
@@ -322,28 +390,15 @@
         function createContainerCardElement(order) {
             const card = document.createElement('div');
             card.className = 'card container-card';
-            
             const startDate = new Date(order['תאריך הזמנה']);
             const endDate = new Date(order['תאריך סיום צפוי']);
-            const totalMs = endDate - startDate;
-            const elapsedMs = Date.now() - startDate;
-            const progress = totalMs > 0 ? Math.min(100, (elapsedMs / totalMs) * 100) : 0;
+            const progress = Math.min(100, ((Date.now() - startDate) / (endDate - startDate)) * 100);
             const remainingDays = Math.ceil(Math.max(0, endDate - Date.now()) / (1000 * 60 * 60 * 24));
             const isOverdue = Date.now() > endDate;
-
             if(isOverdue) card.classList.add('overdue');
-
-            // MOCK DATA for request history - replace with real data
-            const requestHistory = order.requests || [
-                { type: 'פינוי', date: '08/09/2025' },
-                { type: 'החלפה', date: '01/09/2025' }
-            ];
             
-            const historyHTML = requestHistory.map(req => `
-                <div class="request-history-item">
-                    <span>בקשת ${req.type}</span>
-                    <span style="color: var(--text-muted);">${req.date}</span>
-                </div>`).join('');
+            const requestHistory = order.requests || [];
+            const historyHTML = requestHistory.map(req => `<div class="request-history-item"><span>בקשת ${req.type}</span><span style="color: var(--text-muted);">${req.date}</span></div>`).join('');
 
             card.innerHTML = `
                 <div style="display:flex; justify-content: space-between; align-items: flex-start;">
@@ -365,32 +420,66 @@
                 <div style="display: flex; gap: 10px; margin-top: 20px;">
                     <button class="btn secondary" style="flex:1;" data-action="request-swap" data-order-id="${order['מספר תעודה']}">בקש החלפה</button>
                     <button class="btn" style="flex:1;" data-action="request-pickup" data-order-id="${order['מספר תעודה']}">בקש פינוי</button>
-                </div>
-            `;
+                </div>`;
             return card;
         }
         
+        async function sendClientRequest(requestType, details) {
+             try {
+                showToast("שולח בקשה...");
+                await apiPost({ action: 'clientRequest', clientId: clientState.id, clientName: clientState.name, requestType, details });
+                showToast("בקשתך נשלחה בהצלחה!", 'success');
+            } catch (error) { showToast(`שגיאה בשליחת הבקשה`, 'error'); }
+        }
+
+        function openOrderModal(actionType, order) {
+             const isNewOrder = !order;
+             let title = isNewOrder ? "הזמנת מכולה חדשה" : `בקשת ${actionType}`;
+             let addressContent = isNewOrder ? `<div class="form-group"><label>בחר כתובת או הקלד חדשה</label><select id="address-select"><option value="">-- בחר כתובת --</option>${Array.from(clientState.addresses).map(a => `<option value="${a}">${a}</option>`).join('')}<option value="new">כתובת חדשה...</option></select></div><div id="new-address-group" style="display:none; margin-top:10px;"><input type="text" id="new-address" placeholder="עיר, רחוב, מספר בית" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border);"></div>` : `<p style="margin-bottom: 20px;">עבור מכולה בכתובת: <strong>${order['כתובת']}</strong></p>`;
+             dom.modalContainer.innerHTML = `<div class="modal-content"><h3 style="margin-bottom: 20px;">${title}</h3>${addressContent}<form id="order-request-form"><div style="margin-top:15px;"><label>הערות</label><textarea id="order-notes" placeholder="לדוגמה: נא לתאם הגעה טלפונית..." style="width:100%; height:80px; padding:10px; border-radius:8px; border:1px solid var(--border); margin-top:5px;"></textarea></div><div style="display: flex; gap: 10px; margin-top:20px;"><button type="button" class="btn secondary" data-action="close-modal" style="flex:1;">ביטול</button><button type="submit" class="btn" style="flex:2;">שלח בקשה</button></div></form></div>`;
+             dom.modalContainer.classList.add('show');
+            if (isNewOrder) { document.getElementById('address-select').onchange = (e) => { document.getElementById('new-address-group').style.display = e.target.value === 'new' ? 'block' : 'none'; }; }
+            dom.modalContainer.querySelector('[data-action="close-modal"]').onclick = () => dom.modalContainer.classList.remove('show');
+            document.getElementById('order-request-form').onsubmit = (e) => {
+                e.preventDefault();
+                let details, address;
+                const notes = document.getElementById('order-notes').value;
+                if(isNewOrder) {
+                    const newAddress = document.getElementById('new-address').value.trim();
+                    address = newAddress || document.getElementById('address-select').value;
+                    if (!address || address === 'new' || address === '') { showToast('אנא בחר או הקלד כתובת.', 'error'); return; }
+                    details = `כתובת: ${address}. הערות: ${notes || 'אין'}`;
+                } else { details = `מכולה קיימת: ${order['מספר תעודה']}. כתובת: ${order['כתובת']}. הערות: ${notes || 'אין'}`; }
+                sendClientRequest(actionType, details);
+                dom.modalContainer.classList.remove('show');
+            };
+        }
+
         function renderLeafletMap(container, address) { /* ... same as before */ }
-        function showPwaOnboardingModal() { /* ... same as before */ }
         function showToast(message, type = 'info') { /* ... same as before */ }
         
         function setupEventListeners() {
             dom.body.addEventListener('click', (e) => {
                 const actionElement = e.target.closest('[data-action]');
-                if (!actionElement) return;
+                if (!actionElement) {
+                    if(!e.target.closest('#profile-container')) dom.profileContainer.classList.remove('active');
+                    return;
+                };
 
                 const action = actionElement.dataset.action;
                 switch(action) {
-                    case 'navigate':
-                        navigateTo(actionElement.dataset.page);
+                    case 'navigate': navigateTo(actionElement.dataset.page); break;
+                    case 'help-fab': dom.helpModal.classList.add('show'); break;
+                    case 'help-close': dom.helpModal.classList.remove('show'); break;
+                    case 'toggle-profile': dom.profileContainer.classList.toggle('active'); break;
+                    case 'logout': localStorage.clear(); window.location.reload(); break;
+                    case 'new-order': openOrderModal('הזמנה חדשה'); break;
+                    case 'request-swap': case 'request-pickup': {
+                        const orderId = actionElement.dataset.orderId;
+                        const order = clientState.orders.find(o => o['מספר תעודה'] == orderId);
+                        if (order) openOrderModal(action === 'request-swap' ? 'החלפה' : 'פינוי', order);
                         break;
-                    case 'help-fab':
-                        dom.helpModal.classList.add('show');
-                        break;
-                    case 'help-close':
-                        dom.helpModal.classList.remove('show');
-                        break;
-                    // Add other actions like pickup/swap here
+                    }
                 }
             });
         }
